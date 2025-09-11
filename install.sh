@@ -151,7 +151,7 @@ echo -e "\n${CYAN}Шаг 4: Настройка Nginx...${NC}"
 read_input "Какой порт вы будете использовать для вебхуков YooKassa? (443 или 8443, рекомендуется 443): " YOOKASSA_PORT_INPUT
 YOOKASSA_PORT=${YOOKASSA_PORT_INPUT:-443}
 
-NGINX_ENABLED_FILE="/etc/nginx/sites-enabled/${PROJECT_DIR}.conf"
+NGINX_ENABLED_FILE="/etc/nginx/sites-enabled/$(basename \"$PROJECT_DIR\").conf"
 
 echo -e "Создаем конфигурацию Nginx..."
 sudo rm -rf /etc/nginx/sites-enabled/default
