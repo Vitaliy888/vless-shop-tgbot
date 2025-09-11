@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Главная - VLESS ShopBot{% endblock %}
+{% block content %}
+<div class="landing">
+  <h1>Добро пожаловать в панель управления VLESS ShopBot</h1>
+  <p>Управляйте хостами, тарифами и пользователями через удобную панель.</p>
+  <p>Для доступа к панели администратора войдите через <a href="{{ url_for('login_page') }}">страницу входа</a>.</p>
+  <div class="landing-actions">
+    <a class="button button-primary" href="{{ url_for('login_page') }}">Войти</a>
+    <a class="button" href="/docs">Документация (если есть)</a>
+  </div>
+</div>
+{% endblock %}
