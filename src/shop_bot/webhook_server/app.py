@@ -22,8 +22,8 @@ from shop_bot.data_manager.database import (
     create_host, delete_host, create_plan, delete_plan, get_user_count,
     get_total_keys_count, get_total_spent_sum, get_daily_stats_for_charts,
     get_recent_transactions, get_paginated_transactions, get_all_users, get_user_keys,
-    ban_user, unban_user, delete_user_keys, get_setting, find_and_complete_ton_transaction
-    , update_key_name, get_key_by_id, delete_user
+    ban_user, unban_user, delete_user_keys, get_setting, find_and_complete_ton_transaction,
+    update_key_name, get_key_by_id, delete_user, get_host, update_key_max_connections
 )
 
 _bot_controller = None
@@ -343,7 +343,6 @@ def create_webhook_app(bot_controller_instance):
     def add_host_route():
         max_users_raw = request.form.get('host_max_users', '').strip()
         max_users = int(max_users_raw) if max_users_raw else None
-        # create_host currently writes max_users as NULL by default; update row after insert
         create_host(
             name=request.form['host_name'],
             url=request.form['host_url'],
@@ -353,9 +352,6 @@ def create_webhook_app(bot_controller_instance):
         )
         if max_users is not None:
             try:
-                db = __import__('shop_bot.data_manager.database', fromlist=['update'])
-                conn = __import__('sqlite3')
-                # update host max_users
                 from shop_bot.data_manager.database import DB_FILE
                 import sqlite3 as _sqlite
                 with _sqlite.connect(DB_FILE) as conn:
@@ -365,14 +361,14 @@ def create_webhook_app(bot_controller_instance):
             except Exception:
                 logger.exception('Failed to save max_users for new host')
         flash(f"Хост '{request.form['host_name']}' успешно добавлен.", 'success')
-    return redirect(url_for('servers_page'))
+        return redirect(url_for('servers_page'))
 
     @flask_app.route('/delete-host/<host_name>', methods=['POST'])
     @login_required
     def delete_host_route(host_name):
         delete_host(host_name)
         flash(f"Хост '{host_name}' и все его тарифы были удалены.", 'success')
-    return redirect(url_for('servers_page'))
+        return redirect(url_for('servers_page'))
 
     @flask_app.route('/add-plan', methods=['POST'])
     @login_required
@@ -384,14 +380,14 @@ def create_webhook_app(bot_controller_instance):
             price=float(request.form['price'])
         )
         flash(f"Новый тариф для хоста '{request.form['host_name']}' добавлен.", 'success')
-    return redirect(url_for('servers_page'))
+        return redirect(url_for('servers_page'))
 
     @flask_app.route('/delete-plan/<int:plan_id>', methods=['POST'])
     @login_required
     def delete_plan_route(plan_id):
         delete_plan(plan_id)
         flash("Тариф успешно удален.", 'success')
-    return redirect(url_for('servers_page'))
+        return redirect(url_for('servers_page'))
 
     @flask_app.route('/yookassa-webhook', methods=['POST'])
     def yookassa_webhook_handler():
