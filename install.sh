@@ -27,7 +27,7 @@ INSTALL_DIR="/opt/vless-shopbot"
 PROJECT_DIR="${INSTALL_DIR}"
 NGINX_CONF_FILE="/etc/nginx/sites-available/vless-shopbot.conf"
 
-read -p "Install branch or tag (leave empty for default branch): " GIT_REF < /dev/tty
+GIT_REF=""
 
 echo -e "${GREEN}--- Запуск скрипта установки/обновления VLESS Shop Bot ---${NC}"
 
