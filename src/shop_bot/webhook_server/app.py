@@ -35,7 +35,7 @@ ALL_SETTINGS_KEYS = [
     "yookassa_secret_key", "sbp_enabled", "receipt_email", "cryptobot_token",
     "heleket_merchant_id", "heleket_api_key", "domain", "referral_percentage",
     "referral_discount", "ton_wallet_address", "tonapi_key", "force_subscription", "trial_enabled", "trial_duration_days", "enable_referrals", "minimum_withdrawal",
-    "support_group_id", "support_bot_token", "default_max_connections", "key_name_template", "key_email_domain"
+    "support_group_id", "support_bot_token", "default_max_connections", "key_name_template", "key_email_domain", "key_connection_remark_template"
 ]
 
 def create_webhook_app(bot_controller_instance):
@@ -81,6 +81,11 @@ def create_webhook_app(bot_controller_instance):
     def login_page():
         settings = get_all_settings()
         if request.method == 'POST':
+            try:
+                raw_remark = request.form.get('key_connection_remark_template')
+                logger.info(f"DEBUG: Posted key_connection_remark_template='{raw_remark}'")
+            except Exception:
+                logger.exception('Could not read key_connection_remark_template from form')
             if request.form.get('username') == settings.get("panel_login") and \
                request.form.get('password') == settings.get("panel_password"):
                 session['logged_in'] = True
