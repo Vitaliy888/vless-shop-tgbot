@@ -110,7 +110,8 @@ def create_webhook_app(bot_controller_instance):
         repo_root = Path(__file__).resolve().parents[2]
         version_file = repo_root / 'VERSION'
         version = version_file.read_text().strip() if version_file.exists() else 'unknown'
-        return render_template('landing.html', settings=current_settings, version=version)
+        common_data = get_common_template_data()
+        return render_template('landing.html', settings=current_settings, version=version, **common_data)
 
     @flask_app.route('/dashboard')
     @login_required
