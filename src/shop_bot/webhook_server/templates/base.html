@@ -26,6 +26,11 @@
 						>Пользователи</a
 					>
 					<a
+							 href="{{ url_for('servers_page') }}"
+							 class="nav-link {% if request.endpoint == 'servers_page' %}active{% endif %}"
+							>Серверы</a
+						>
+					<a
 						href="{{ url_for('settings_page') }}"
 						class="nav-link {% if request.endpoint == 'settings_page' %}active{% endif %}"
 						>Настройки</a

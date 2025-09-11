@@ -224,6 +224,17 @@ def create_webhook_app(bot_controller_instance):
             return redirect(url_for('settings_page'))
 
         current_settings = get_all_settings()
+        
+        # version info
+        repo_root = Path(__file__).resolve().parents[2]
+        version_file = repo_root / 'VERSION'
+        version = version_file.read_text().strip() if version_file.exists() else 'unknown'
+        common_data = get_common_template_data()
+        return render_template('settings.html', settings=current_settings, version=version, **common_data)
+
+    @flask_app.route('/servers', methods=['GET'])
+    @login_required
+    def servers_page():
         hosts = get_all_hosts()
         for host in hosts:
             host['plans'] = get_plans_for_host(host['host_name'])
@@ -231,13 +242,8 @@ def create_webhook_app(bot_controller_instance):
                 host['current_users'] = database.get_current_users_count_for_host(host['host_name'])
             except Exception:
                 host['current_users'] = 0
-        
-        # version info
-        repo_root = Path(__file__).resolve().parents[2]
-        version_file = repo_root / 'VERSION'
-        version = version_file.read_text().strip() if version_file.exists() else 'unknown'
         common_data = get_common_template_data()
-        return render_template('settings.html', settings=current_settings, hosts=hosts, version=version, **common_data)
+        return render_template('servers.html', hosts=hosts, **common_data)
 
     @flask_app.route('/update-code', methods=['POST'])
     @login_required
@@ -359,14 +365,14 @@ def create_webhook_app(bot_controller_instance):
             except Exception:
                 logger.exception('Failed to save max_users for new host')
         flash(f"Хост '{request.form['host_name']}' успешно добавлен.", 'success')
-        return redirect(url_for('settings_page'))
+    return redirect(url_for('servers_page'))
 
     @flask_app.route('/delete-host/<host_name>', methods=['POST'])
     @login_required
     def delete_host_route(host_name):
         delete_host(host_name)
         flash(f"Хост '{host_name}' и все его тарифы были удалены.", 'success')
-        return redirect(url_for('settings_page'))
+    return redirect(url_for('servers_page'))
 
     @flask_app.route('/add-plan', methods=['POST'])
     @login_required
@@ -378,14 +384,14 @@ def create_webhook_app(bot_controller_instance):
             price=float(request.form['price'])
         )
         flash(f"Новый тариф для хоста '{request.form['host_name']}' добавлен.", 'success')
-        return redirect(url_for('settings_page'))
+    return redirect(url_for('servers_page'))
 
     @flask_app.route('/delete-plan/<int:plan_id>', methods=['POST'])
     @login_required
     def delete_plan_route(plan_id):
         delete_plan(plan_id)
         flash("Тариф успешно удален.", 'success')
-        return redirect(url_for('settings_page'))
+    return redirect(url_for('servers_page'))
 
     @flask_app.route('/yookassa-webhook', methods=['POST'])
     def yookassa_webhook_handler():
