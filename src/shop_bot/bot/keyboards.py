@@ -22,14 +22,16 @@ def create_main_menu_keyboard(user_keys: list, trial_available: bool, is_admin: 
 
     builder.button(text="👤 Мой профиль", callback_data="show_profile")
     builder.button(text=f"🔑 Мои ключи ({len(user_keys)})", callback_data="manage_keys")
-    builder.button(text="🤝 Реферальная программа", callback_data="show_referral_program")
+    enable_referrals = get_setting("enable_referrals") == "true"
+    if enable_referrals:
+        builder.button(text="🤝 Реферальная программа", callback_data="show_referral_program")
     builder.button(text="🆘 Поддержка", callback_data="show_help")
     builder.button(text="ℹ️ О проекте", callback_data="show_about")
     builder.button(text="❓ Как использовать", callback_data="howto_vless")
     if is_admin:
         builder.button(text="📢 Рассылка", callback_data="start_broadcast")
 
-    layout = [1 if trial_available and get_setting("trial_enabled") == "true" else 0, 2, 1, 2, 1, 1 if is_admin else 0]
+    layout = [1 if trial_available and get_setting("trial_enabled") == "true" else 0, 2, 1, 2, 1, 1 if enable_referrals else 0, 1 if is_admin else 0]
     actual_layout = [size for size in layout if size > 0]
     builder.adjust(*actual_layout)
     

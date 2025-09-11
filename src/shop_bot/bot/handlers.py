@@ -125,13 +125,15 @@ def get_user_router() -> Router:
         referrer_id = None
 
         if command.args and command.args.startswith('ref_'):
-            try:
-                potential_referrer_id = int(command.args.split('_')[1])
-                if potential_referrer_id != user_id:
-                    referrer_id = potential_referrer_id
-                    logger.info(f"New user {user_id} was referred by {referrer_id}")
-            except (IndexError, ValueError):
-                logger.warning(f"Invalid referral code received: {command.args}")
+                # process referral code only if referrals are enabled in settings
+                if get_setting("enable_referrals") == "true":
+                    try:
+                        potential_referrer_id = int(command.args.split('_')[1])
+                        if potential_referrer_id != user_id:
+                            referrer_id = potential_referrer_id
+                            logger.info(f"New user {user_id} was referred by {referrer_id}")
+                    except (IndexError, ValueError):
+                        logger.warning(f"Invalid referral code received: {command.args}")
                 
         register_user_if_not_exists(user_id, username, referrer_id)
         user_id = message.from_user.id
@@ -419,13 +421,17 @@ def get_user_router() -> Router:
     @user_router.callback_query(F.data == "show_referral_program")
     @registration_required
     async def referral_program_handler(callback: types.CallbackQuery):
+        # ensure referrals are enabled
+        if get_setting("enable_referrals") != "true":
+            await callback.answer("Реферальная программа отключена", show_alert=True)
+            return
         await callback.answer()
         user_id = callback.from_user.id
         user_data = get_user(user_id)
         bot_username = (await callback.bot.get_me()).username
         
         referral_link = f"https://t.me/{bot_username}?start=ref_{user_id}"
-        referral_count = get_referral_count(user_id)
+        referral_count = get_referral_count(user_id) if get_setting("enable_referrals") == "true" else 0
         balance = user_data.get('referral_balance', 0)
 
         text = (
@@ -1588,7 +1594,7 @@ async def process_successful_payment(bot: Bot, metadata: dict):
         user_data = get_user(user_id)
         referrer_id = user_data.get('referred_by')
 
-        if referrer_id:
+        if get_setting("enable_referrals") == "true" and referrer_id:
             percentage = Decimal(get_setting("referral_percentage") or "0")
             
             reward = (Decimal(str(price)) * percentage / 100).quantize(Decimal("0.01"))
