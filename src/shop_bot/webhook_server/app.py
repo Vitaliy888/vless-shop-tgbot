@@ -35,7 +35,7 @@ ALL_SETTINGS_KEYS = [
     "yookassa_secret_key", "sbp_enabled", "receipt_email", "cryptobot_token",
     "heleket_merchant_id", "heleket_api_key", "domain", "referral_percentage",
     "referral_discount", "ton_wallet_address", "tonapi_key", "force_subscription", "trial_enabled", "trial_duration_days", "enable_referrals", "minimum_withdrawal",
-    "support_group_id", "support_bot_token", "default_max_connections"
+    "support_group_id", "support_bot_token", "default_max_connections", "key_name_template", "key_email_domain"
 ]
 
 def create_webhook_app(bot_controller_instance):
@@ -146,11 +146,27 @@ def create_webhook_app(bot_controller_instance):
     @login_required
     def users_page():
         users = get_all_users()
+        # fetch template once
+        name_template = get_setting('key_name_template') or '{name_or_email}'
         for user in users:
             user['user_keys'] = get_user_keys(user['telegram_id'])
             # add summary data
             user['total_spent'] = user.get('total_spent', 0) or 0
             user['total_keys_count'] = len(user['user_keys'])
+            # enrich keys with display_name
+            for k in user['user_keys']:
+                try:
+                    name_or_email = k.get('key_name') or k.get('key_email')
+                    context = {
+                        'id': k.get('key_id'),
+                        'name': k.get('key_name') or '',
+                        'email': k.get('key_email') or '',
+                        'name_or_email': name_or_email,
+                        'host': k.get('host_name') or ''
+                    }
+                    k['display_name'] = name_template.format(**context)
+                except Exception:
+                    k['display_name'] = k.get('key_name') or k.get('key_email')
         
         common_data = get_common_template_data()
         return render_template('users.html', users=users, **common_data)

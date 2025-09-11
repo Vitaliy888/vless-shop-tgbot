@@ -121,6 +121,8 @@ def initialize_db():
                 "tonapi_key": None,
                     "enforce_max_connections": "false",
                 "default_max_connections": "0",
+                "key_name_template": "{name_or_email}",
+                "key_email_domain": "{bot_username}.bot",
             }
             run_migration()
             for key, value in default_settings.items():

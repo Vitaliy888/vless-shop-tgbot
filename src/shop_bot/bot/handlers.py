@@ -618,9 +618,13 @@ def get_user_router() -> Router:
         await message.edit_text(f"Отлично! Создаю для вас бесплатный ключ на {get_setting('trial_duration_days')} дня на сервере \"{host_name}\"...")
 
         try:
+            # build email using configurable domain pattern
+            domain_pattern = get_setting('key_email_domain') or '{bot_username}.bot'
+            bot_username = get_setting('telegram_bot_username') or 'bot'
+            domain = domain_pattern.format(bot_username=bot_username, host=host_name.replace(' ', '').lower())
             result = await xui_api.create_or_update_key_on_host(
                 host_name=host_name,
-                email=f"user{user_id}-key{get_next_key_number(user_id)}-trial@telegram.bot",
+                email=f"user{user_id}-key{get_next_key_number(user_id)}-trial@{domain}",
                 days_to_add=int(get_setting("trial_duration_days"))
             )
             if not result:
@@ -1606,7 +1610,10 @@ async def process_successful_payment(bot: Bot, metadata: dict):
                     logger.exception('Failed to check host user limits; proceeding with key creation')
 
             key_number = get_next_key_number(user_id)
-            email = f"user{user_id}-key{key_number}@{host_name.replace(' ', '').lower()}.bot"
+            domain_pattern = get_setting('key_email_domain') or '{bot_username}.bot'
+            bot_username = get_setting('telegram_bot_username') or 'bot'
+            domain = domain_pattern.format(bot_username=bot_username, host=host_name.replace(' ', '').lower())
+            email = f"user{user_id}-key{key_number}@{domain}"
         elif action == "extend":
             key_data = get_key_by_id(key_id)
             if not key_data or key_data['user_id'] != user_id:
