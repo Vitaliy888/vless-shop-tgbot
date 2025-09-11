@@ -36,6 +36,7 @@
 					{% endif %}
 				</nav>
 
+				{% if session.get('logged_in') %}
 				<div class="header-controls">
 					<div class="bot-control">
 						{% if bot_status.shop_bot_running %}
@@ -61,7 +62,8 @@
 						>
 							Запустить
 						</button>
-						{% endif %} {% endif %}
+						{% endif %}
+						{% endif %}
 					</div>
 
 					<div class="bot-control">
@@ -99,6 +101,7 @@
 						</form>
 					</div>
 				</div>
+				{% endif %}
 			</header>
 
 			{% with messages = get_flashed_messages(with_categories=true) %} {% if
