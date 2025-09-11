@@ -20,8 +20,7 @@ read_input_yn() {
 }
 
 DEFAULT_REPO_URL="https://github.com/Vitaliy888/vless-shop-tgbot.git"
-read -p "Repo URL [${DEFAULT_REPO_URL}]: " REPO_URL_INPUT < /dev/tty
-REPO_URL=${REPO_URL_INPUT:-$DEFAULT_REPO_URL}
+REPO_URL=$DEFAULT_REPO_URL
 
 # Installation directory (absolute)
 INSTALL_DIR="/opt/vless-shopbot"
