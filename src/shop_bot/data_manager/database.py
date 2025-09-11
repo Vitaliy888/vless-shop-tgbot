@@ -120,6 +120,7 @@ def initialize_db():
                 "ton_wallet_address": None,
                 "tonapi_key": None,
                     "enforce_max_connections": "false",
+                "default_max_connections": "0",
             }
             run_migration()
             for key, value in default_settings.items():

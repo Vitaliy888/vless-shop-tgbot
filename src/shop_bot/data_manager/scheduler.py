@@ -248,7 +248,15 @@ async def enforce_connection_limits_for_host(api, inbound, full_inbound_details,
             db_record = db_map[email]
             max_conn = db_record.get('max_connections')
             if not max_conn:
-                continue
+                # fallback to global default if configured (>0)
+                try:
+                    global_default = database.get_setting('default_max_connections')
+                    if global_default and global_default.isdigit() and int(global_default) > 0:
+                        max_conn = int(global_default)
+                    else:
+                        continue
+                except Exception:
+                    continue
 
             # try to discover current active connections on the client object
             current = None

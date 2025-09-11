@@ -105,6 +105,10 @@
 					<input type="checkbox" id="enforce_max_connections" name="enforce_max_connections" value="true" {% if settings.enforce_max_connections == 'true' %}checked{% endif %}>
 					<label for="enforce_max_connections">Автоматически отключать клиентов при превышении max_connections</label>
 				</div>
+				<div class="form-group">
+					<label for="default_max_connections">Глобальный лимит max_connections (0 = не задавать по умолчанию):</label>
+					<input type="number" min="0" id="default_max_connections" name="default_max_connections" value="{{ settings.default_max_connections or '0' }}" />
+				</div>
 			</section>
 			<section class="settings-section">
 				<h2>Настройки Реферальной программы</h2>
