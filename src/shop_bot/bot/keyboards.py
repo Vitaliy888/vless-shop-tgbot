@@ -69,9 +69,23 @@ def create_about_keyboard(channel_url: str | None, terms_url: str | None, privac
     builder.adjust(1)
     return builder.as_markup()
     
-def create_support_keyboard(support_user: str) -> InlineKeyboardMarkup:
+def create_support_keyboard(support_user: str | None) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text="🆘 Написать в поддержку", url=support_user)
+    if support_user:
+        url = support_user.strip()
+        # Нормализация форматов: @user -> https://t.me/user, t.me/user -> https://t.me/user
+        if url.startswith('@'):
+            url = f"https://t.me/{url[1:]}"
+        elif url.startswith('t.me/'):
+            url = f"https://{url}"
+        elif url.startswith('telegram.me/'):
+            url = f"https://{url}"
+        # Если нет схемы и не начинается с https://t.me/
+        if not url.startswith('http://') and not url.startswith('https://'):
+            # Попробуем считать, что это username без @
+            if all(c.isalnum() or c in ('_', '-') for c in url):
+                url = f"https://t.me/{url}"
+        builder.button(text="🆘 Написать в поддержку", url=url)
     builder.button(text="⬅️ Назад в меню", callback_data="back_to_main_menu")
     builder.adjust(1)
     return builder.as_markup()

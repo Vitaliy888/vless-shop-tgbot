@@ -72,11 +72,6 @@
 						value="{{ settings.support_user or '' }}"
 					/>
 				</div>
-				<div class="form-group form-group-checkbox">
-					<input type="hidden" name="enforce_max_connections" value="false" />
-					<input type="checkbox" id="enforce_max_connections" name="enforce_max_connections" value="true" {% if settings.enforce_max_connections == 'true' %}checked{% endif %}>
-					<label for="enforce_max_connections">Автоматически отключать клиентов при превышении max_connections</label>
-				</div>
 				<div class="form-group password-wrapper">
 					<label for="support_bot_token"
 						>Токен Support-бота (если используется):</label
@@ -100,6 +95,15 @@
 						name="support_group_id"
 						value="{{ settings.support_group_id or '' }}"
 					/>
+				</div>
+			</section>
+
+			<section class="settings-section">
+				<h2>Технические Параметры</h2>
+				<div class="form-group form-group-checkbox">
+					<input type="hidden" name="enforce_max_connections" value="false" />
+					<input type="checkbox" id="enforce_max_connections" name="enforce_max_connections" value="true" {% if settings.enforce_max_connections == 'true' %}checked{% endif %}>
+					<label for="enforce_max_connections">Автоматически отключать клиентов при превышении max_connections</label>
 				</div>
 			</section>
 			<section class="settings-section">
