@@ -19,7 +19,7 @@ read_input_yn() {
     echo
 }
 
-DEFAULT_REPO_URL="https://github.com/evansvl/vless-shopbot.git"
+DEFAULT_REPO_URL="https://github.com/Vitaliy888/vless-shop-tgbot.git"
 read -p "Repo URL [${DEFAULT_REPO_URL}]: " REPO_URL_INPUT < /dev/tty
 REPO_URL=${REPO_URL_INPUT:-$DEFAULT_REPO_URL}
 

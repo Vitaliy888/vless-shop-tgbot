@@ -153,7 +153,7 @@ docker-compose up -d
 **Обновить бота до последней версии:**
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/evansvl/vless-shopbot/main/install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/Vitaliy888/vless-shop-tgbot/main/install.sh | sudo bash
 ```
 
 ## 🙌 Баги и предложения

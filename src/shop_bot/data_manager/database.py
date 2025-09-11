@@ -6,7 +6,10 @@ import json
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path("/app/project")
+# Project root: prefer repository root (two levels up from this file).
+# This makes the code work both inside Docker (where /app/project is used)
+# and when running natively (WSL / local checkout).
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DB_FILE = PROJECT_ROOT / "users.db"
 
 def initialize_db():
