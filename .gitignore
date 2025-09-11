@@ -18,4 +18,8 @@ dist/
 .vscode/
 *.DS_Store
 
-test
+testusers.db
+.env
+*.pyc
+__pycache__/
+.DS_Store
