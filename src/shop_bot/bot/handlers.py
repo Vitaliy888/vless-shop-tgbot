@@ -733,15 +733,20 @@ def get_user_router() -> Router:
         await callback.answer()
         await callback.message.edit_text(
             "<b>Подключение на Android</b>\n\n"
-            "1. <b>Установите приложение V2RayTun:</b> Загрузите и установите приложение V2RayTun из Google Play Store.\n"
-            "2. <b>Скопируйте свой ключ (vless://)</b> Перейдите в раздел «Моя подписка» в нашем боте и скопируйте свой ключ.\n"
-            "3. <b>Импортируйте конфигурацию:</b>\n"
-            "   • Откройте V2RayTun.\n"
-            "   • Нажмите на значок + в правом нижнем углу.\n"
-            "   • Выберите «Импортировать конфигурацию из буфера обмена» (или аналогичный пункт).\n"
-            "4. <b>Выберите сервер:</b> Выберите появившийся сервер в списке.\n"
-            "5. <b>Подключитесь к VPN:</b> Нажмите на кнопку подключения (значок «V» или воспроизведения). Возможно, потребуется разрешение на создание VPN-подключения.\n"
-            "6. <b>Проверьте подключение:</b> После подключения проверьте свой IP-адрес, например, на https://whatismyipaddress.com/. Он должен отличаться от вашего реального IP.",
+            "<b>Поддерживаемые приложения (VLESS, ищите в Google Play):</b>\n"
+            "• <a href=\"https://play.google.com/store/apps/details?id=com.v2ray.ang\">v2rayNG</a> (основной клиент)\n"
+            "• <a href=\"https://play.google.com/store/search?q=Hiddify&c=apps\">Hiddify</a> (если доступно)\n"
+            "• <a href=\"https://play.google.com/store/search?q=V2RayTun&c=apps\">V2RayTun</a> (альтернатива)\n"
+            "• Clash / Clash Meta (обычно нет в Google Play)\n\n"
+            "<b>Шаги (универсально):</b>\n"
+            "1. Установите Hiddify и откройте приложение.\n"
+            "2. Скопируйте VLESS-ссылку (в боте в разделе ключей / подписки).\n"
+            "3. В Hiddify нажмите + (или Import) → Paste / Clipboard.\n"
+            "4. Проверьте что профиль появился в списке.\n"
+            "5. Нажмите Connect / Включите переключатель.\n"
+            "6. При запросе разрешите создание VPN.\n"
+            "7. Проверьте IP: https://whatismyipaddress.com/ (должен измениться).\n\n"
+            "<b>Совет:</b> Если импорт не сработал — убедитесь, что скопирована полная строка начиная с vless://",
         reply_markup=keyboards.create_howto_vless_keyboard(),
         disable_web_page_preview=True
     )
@@ -752,15 +757,19 @@ def get_user_router() -> Router:
         await callback.answer()
         await callback.message.edit_text(
             "<b>Подключение на iOS (iPhone/iPad)</b>\n\n"
-            "1. <b>Установите приложение V2RayTun:</b> Загрузите и установите приложение V2RayTun из App Store.\n"
-            "2. <b>Скопируйте свой ключ (vless://):</b> Перейдите в раздел «Моя подписка» в нашем боте и скопируйте свой ключ.\n"
-            "3. <b>Импортируйте конфигурацию:</b>\n"
-            "   • Откройте V2RayTun.\n"
-            "   • Нажмите на значок +.\n"
-            "   • Выберите «Импортировать конфигурацию из буфера обмена» (или аналогичный пункт).\n"
-            "4. <b>Выберите сервер:</b> Выберите появившийся сервер в списке.\n"
-            "5. <b>Подключитесь к VPN:</b> Включите главный переключатель в V2RayTun. Возможно, потребуется разрешить создание VPN-подключения.\n"
-            "6. <b>Проверьте подключение:</b> После подключения проверьте свой IP-адрес, например, на https://whatismyipaddress.com/. Он должен отличаться от вашего реального IP.",
+            "<b>Поддерживаемые приложения (App Store):</b>\n"
+            "• <a href=\"https://apps.apple.com/app/shadowrocket/id932747118\">Shadowrocket</a> (платно)\n"
+            "• <a href=\"https://apps.apple.com/app/stash-rule-based-proxy/id1596063349\">Stash</a>\n"
+            "• FoXray / Sing-box (могут отсутствовать)\n\n"
+            "<b>Шаги (универсально):</b>\n"
+            "1. Установите выбранное приложение из App Store.\n"
+            "2. Скопируйте VLESS-ссылку из бота.\n"
+            "3. В приложении выберите импорт из буфера обмена.\n"
+            "4. Убедитесь, что профиль добавлен.\n"
+            "5. Нажмите Connect / включите переключатель.\n"
+            "6. Разрешите создание VPN-профиля при первом подключении.\n"
+            "7. Проверьте IP: https://whatismyipaddress.com/.\n\n"
+            "<b>Примечание:</b> Shadowrocket / Stash могут требовать дополнительные разрешения при первом запуске.",
         reply_markup=keyboards.create_howto_vless_keyboard(),
         disable_web_page_preview=True
     )
@@ -771,19 +780,21 @@ def get_user_router() -> Router:
         await callback.answer()
         await callback.message.edit_text(
             "<b>Подключение на Windows</b>\n\n"
-            "1. <b>Установите приложение Nekoray:</b> Загрузите Nekoray с https://github.com/MatsuriDayo/Nekoray/releases. Выберите подходящую версию (например, Nekoray-x64.exe).\n"
-            "2. <b>Распакуйте архив:</b> Распакуйте скачанный архив в удобное место.\n"
-            "3. <b>Запустите Nekoray.exe:</b> Откройте исполняемый файл.\n"
-            "4. <b>Скопируйте свой ключ (vless://)</b> Перейдите в раздел «Моя подписка» в нашем боте и скопируйте свой ключ.\n"
-            "5. <b>Импортируйте конфигурацию:</b>\n"
-            "   • В Nekoray нажмите «Сервер» (Server).\n"
-            "   • Выберите «Импортировать из буфера обмена».\n"
-            "   • Nekoray автоматически импортирует конфигурацию.\n"
-            "6. <b>Обновите серверы (если нужно):</b> Если серверы не появились, нажмите «Серверы» → «Обновить все серверы».\n"
-            "7. Сверху включите пункт 'Режим TUN' ('Tun Mode')\n"
-            "8. <b>Выберите сервер:</b> В главном окне выберите появившийся сервер.\n"
-            "9. <b>Подключитесь к VPN:</b> Нажмите «Подключить» (Connect).\n"
-            "10. <b>Проверьте подключение:</b> Откройте браузер и проверьте IP на https://whatismyipaddress.com/. Он должен отличаться от вашего реального IP.",
+            "Официальных Windows-магазинов (с нужными клиентами) обычно нет — используйте установщики с официальных страниц проектов.\n\n"
+            "<b>Популярные клиенты (скачивайте только с официальных источников):</b>\n"
+            "• <a href=\"https://github.com/hiddify/hiddify-next/releases\">Hiddify Next</a>\n"
+            "• <a href=\"https://github.com/MatsuriDayo/Nekoray/releases\">Nekoray</a>\n"
+            "• <a href=\"https://github.com/2dust/v2rayN/releases\">v2rayN</a>\n"
+            "• <a href=\"https://github.com/zzzgydi/clash-verge/releases\">Clash Verge</a> (Clash)\n\n"
+            "<b>Общие шаги:</b>\n"
+            "1. Скачайте и распакуйте архив приложения.\n"
+            "2. Запустите исполняемый файл.\n"
+            "3. Скопируйте VLESS-ссылку из бота.\n"
+            "4. Импорт: Меню → Import / Импорт из буфера обмена.\n"
+            "5. Включите TUN / System Proxy (если нужно полный трафик).\n"
+            "6. Выберите профиль → Connect.\n"
+            "7. Проверьте IP: https://whatismyipaddress.com/.\n\n"
+            "<b>Подсказка:</b> Если нет трафика — отключите антивирусный фильтр или перезапустите приложение от имени администратора.",
         reply_markup=keyboards.create_howto_vless_keyboard(),
         disable_web_page_preview=True
     )
@@ -794,21 +805,39 @@ def get_user_router() -> Router:
         await callback.answer()
         await callback.message.edit_text(
             "<b>Подключение на Linux</b>\n\n"
-            "1. <b>Скачайте и распакуйте Nekoray:</b> Перейдите на https://github.com/MatsuriDayo/Nekoray/releases и скачайте архив для Linux. Распакуйте его в удобную папку.\n"
-            "2. <b>Запустите Nekoray:</b> Откройте терминал, перейдите в папку с Nekoray и выполните <code>./nekoray</code> (или используйте графический запуск, если доступен).\n"
-            "3. <b>Скопируйте свой ключ (vless://)</b> Перейдите в раздел «Моя подписка» в нашем боте и скопируйте свой ключ.\n"
-            "4. <b>Импортируйте конфигурацию:</b>\n"
-            "   • В Nekoray нажмите «Сервер» (Server).\n"
-            "   • Выберите «Импортировать из буфера обмена».\n"
-            "   • Nekoray автоматически импортирует конфигурацию.\n"
-            "5. <b>Обновите серверы (если нужно):</b> Если серверы не появились, нажмите «Серверы» → «Обновить все серверы».\n"
-            "6. Сверху включите пункт 'Режим TUN' ('Tun Mode')\n"
-            "7. <b>Выберите сервер:</b> В главном окне выберите появившийся сервер.\n"
-            "8. <b>Подключитесь к VPN:</b> Нажмите «Подключить» (Connect).\n"
-            "9. <b>Проверьте подключение:</b> Откройте браузер и проверьте IP на https://whatismyipaddress.com/. Он должен отличаться от вашего реального IP.",
+            "Репозитории клиентов распространяются через их официальные сайты / GitHub. Магазины дистрибутивов могут не содержать актуальные версии.\n\n"
+            "<b>Клиенты:</b> Hiddify Next, Nekoray, sing-box (CLI), Clash Meta (CLI).\n\n"
+            "<b>Шаги (пример на Nekoray):</b>\n"
+            "1. Скачайте архив и распакуйте: <code>tar -xf nekoray*.tar.gz</code>.\n"
+            "2. Запустите: <code>./nekoray</code>.\n"
+            "3. Скопируйте VLESS-ссылку в боте.\n"
+            "4. Меню Server → Import from clipboard.\n"
+            "5. (Опционально) Включите Tun Mode.\n"
+            "6. Выберите профиль → Connect.\n"
+            "7. Проверка IP: https://whatismyipaddress.com/.\n\n"
+            "<b>CLI варианты:</b> sing-box / clash meta требуют ручного создания JSON / YAML конфигов.",
         reply_markup=keyboards.create_howto_vless_keyboard(),
         disable_web_page_preview=True
     )
+
+    @user_router.callback_query(F.data == "howto_keenetic")
+    @registration_required
+    async def howto_keenetic_handler(callback: types.CallbackQuery):
+        await callback.answer()
+        await callback.message.edit_text(
+            "<b>Подключение на маршрутизаторе Keenetic</b>\n\n"
+            "Инструкция по интеграции VLESS (через внешний клиент/прокси) приведена здесь: \n"
+            "<a href=\"https://rockblack.pro/vpn/dopolnitelno/vless-keenetic\">rockblack.pro/vpn/dopolnitelno/vless-keenetic</a>\n\n"
+            "Кратко:\n"
+            "1. Откройте веб-интерфейс Keenetic.\n"
+            "2. Включите поддержку компонентов (если требуется) для стороннего VPN/прокси (WireGuard / OpenVPN отдельно к VLESS не относится, используется прокси-клиент).\n"
+            "3. Следуйте шагам из подробной инструкции по созданию туннеля / локального клиента.\n"
+            "4. Используйте вашу VLESS-ссылку из бота в соответствующем клиентском ПО.\n"
+            "5. Протестируйте доступ к заблокированным ресурсам и проверьте IP.\n\n"
+            "Если официальная прошивка не поддерживает прямой VLESS — используйте отдельное устройство (Raspberry Pi, mini PC) как локальный прокси и пропишите его в Keenetic.",
+            reply_markup=keyboards.create_howto_vless_keyboard(),
+            disable_web_page_preview=True
+        )
 
     @user_router.callback_query(F.data == "buy_new_key")
     @registration_required
