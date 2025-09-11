@@ -110,14 +110,14 @@
 					<input type="number" min="0" id="default_max_connections" name="default_max_connections" value="{{ settings.default_max_connections or '0' }}" />
 				</div>
 				<div class="form-group">
-					<label for="key_name_template">Шаблон имени ключа (#…):</label>
-					<input type="text" id="key_name_template" name="key_name_template" value="{{ settings.key_name_template or '{name_or_email}' }}" />
-					<small>Доступные плейсхолдеры: {id}, {name}, {email}, {name_or_email}, {host}</small>
-				</div>
-				<div class="form-group">
 					<label for="key_email_domain">Домен (окончание) email ключа в XUI:</label>
 					<input type="text" id="key_email_domain" name="key_email_domain" value="{{ settings.key_email_domain or '{bot_username}.bot' }}" />
 					<small>Плейсхолдеры: {bot_username}, {host}. Пример: user1-key1@vpn-{bot_username}.bot</small>
+				</div>
+				<div class="form-group">
+					<label for="key_connection_remark_template">Шаблон отображаемого имени (Remark) в VLESS ссылке:</label>
+					<input type="text" id="key_connection_remark_template" name="key_connection_remark_template" value="{{ settings.key_connection_remark_template or '{host}' }}" />
+					<small>Плейсхолдеры: {host}, {bot_username}, {user_id}, {key_number}. Пример: {host}-🚀-{bot_username}</small>
 				</div>
 			</section>
 			<section class="settings-section">
