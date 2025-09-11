@@ -542,27 +542,34 @@ def get_user_router() -> Router:
 
     @user_router.callback_query(F.data == "show_help")
     @registration_required
-    async def about_handler(callback: types.CallbackQuery):
+    async def help_handler(callback: types.CallbackQuery):
         await callback.answer()
 
-        support_user = get_setting("support_user")
-        support_text = get_setting("support_text")
+        raw_support_user = get_setting("support_user") or ""
+        support_user = raw_support_user.strip() or None
+        support_text = (get_setting("support_text") or "").strip() or None
 
-        if support_user == None and support_text == None:
+        # Пояснение если ничего не настроено
+        if not support_user and not support_text:
             await callback.message.edit_text(
-                "Информация о поддержке не установлена. Установите её в админ-панели.",
+                "Информация о поддержке не настроена. Задайте 'URL поддержки' в панели (можно @username или https://t.me/username).",
                 reply_markup=keyboards.create_back_to_menu_keyboard()
             )
-        elif support_text == None:
+            return
+
+        # Если есть только ссылка
+        if support_user and not support_text:
             await callback.message.edit_text(
                 "Для связи с поддержкой используйте кнопку ниже.",
                 reply_markup=keyboards.create_support_keyboard(support_user)
             )
-        else:
-            await callback.message.edit_text(
-                support_text + "\n\n",
-                reply_markup=keyboards.create_support_keyboard(support_user)
-            )
+            return
+
+        # Есть текст (и возможна ссылка)
+        await callback.message.edit_text(
+            f"{support_text}\n\n" if support_text else "",
+            reply_markup=keyboards.create_support_keyboard(support_user)
+        )
 
     @user_router.callback_query(F.data == "manage_keys")
     @registration_required
