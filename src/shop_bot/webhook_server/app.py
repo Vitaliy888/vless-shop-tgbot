@@ -21,7 +21,7 @@ from shop_bot.data_manager.database import (
     get_all_settings, update_setting, get_all_hosts, get_plans_for_host,
     create_host, delete_host, create_plan, delete_plan, get_user_count,
     get_total_keys_count, get_total_spent_sum, get_daily_stats_for_charts,
-    get_recent_transactions, get_paginated_transactions, get_all_users, get_user_keys,
+    get_recent_transactions, get_paginated_transactions, get_all_users, get_user_keys, get_user,
     ban_user, unban_user, delete_user_keys, get_setting, find_and_complete_ton_transaction,
     update_key_name, get_key_by_id, delete_user, get_host, update_key_max_connections
 )
@@ -172,6 +172,44 @@ def create_webhook_app(bot_controller_instance):
                     k['display_name'] = name_template.format(**context)
                 except Exception:
                     k['display_name'] = k.get('key_name') or k.get('key_email')
+            # active keys count
+            active = 0
+            from datetime import datetime as _dt
+            for k in user['user_keys']:
+                try:
+                    if k.get('expiry_date'):
+                        exp = _dt.fromisoformat(str(k['expiry_date']))
+                        if exp > _dt.now():
+                            active += 1
+                except Exception:
+                    pass
+            user['active_keys_count'] = active
+            # hosts summary (host: count)
+            host_counts = {}
+            for k in user['user_keys']:
+                hn = k.get('host_name') or '—'
+                host_counts[hn] = host_counts.get(hn, 0) + 1
+            user['hosts_summary'] = "; ".join([f"{h}×{c}" for h, c in sorted(host_counts.items())]) if host_counts else "—"
+            # formatted registration date
+            try:
+                reg = user.get('registration_date')
+                reg_dt = _dt.fromisoformat(str(reg)) if reg else None
+                user['registration_date_formatted'] = reg_dt.strftime('%d.%m.%Y %H:%M') if reg_dt else '—'
+            except Exception:
+                user['registration_date_formatted'] = '—'
+            # referrer display
+            ref_id = user.get('referred_by')
+            if ref_id:
+                try:
+                    ref_user = get_user(int(ref_id))
+                    if ref_user and ref_user.get('username'):
+                        user['referrer_display'] = f"@{ref_user['username']} ({ref_id})"
+                    else:
+                        user['referrer_display'] = str(ref_id)
+                except Exception:
+                    user['referrer_display'] = str(ref_id)
+            else:
+                user['referrer_display'] = '—'
         
         common_data = get_common_template_data()
         return render_template('users.html', users=users, **common_data)

@@ -9,11 +9,14 @@
 		<table class="users-table">
 			<thead>
 				<tr>
-					<th>Telegram ID</th>
+					<th>ID</th>
 					<th>Username</th>
+					<th>Регистрация</th>
 					<th>Статус</th>
-					<th>Потрачено (RUB)</th>
-					<th>Всего ключей</th>
+					<th>Потрачено</th>
+					<th>Ключи (активные/всего)</th>
+					<th>Серверы</th>
+					<th>Реферал</th>
 					<th class="actions-cell">Действия</th>
 				</tr>
 			</thead>
@@ -22,6 +25,7 @@
 				<tr>
 					<td>{{ user.telegram_id }}</td>
 					<td>@{{ user.username or 'N/A' }}</td>
+					<td>{{ user.registration_date_formatted }}</td>
 					<td>
 						{% if user.is_banned %}
 						<span class="status-badge status-banned">Забанен</span>
@@ -29,8 +33,10 @@
 						<span class="status-badge status-active">Активен</span>
 						{% endif %}
 					</td>
-					<td>{{ "{:.2f}".format(user.total_spent or 0) }}</td>
-					<td>{{ user.total_keys_count or 0 }}</td>
+					<td>{{ "{:.2f}".format(user.total_spent or 0) }} RUB</td>
+					<td>{{ user.active_keys_count or 0 }}/{{ user.total_keys_count or 0 }}</td>
+					<td>{{ user.hosts_summary }}</td>
+					<td>{{ user.referrer_display }}</td>
 					<td class="actions-cell">
 						{% if user.is_banned %}
 						<form action="{{ url_for('unban_user_route', user_id=user.telegram_id) }}" method="post">
@@ -41,7 +47,7 @@
 							<button type="submit" class="button button-warning button-small">Бан</button>
 						</form>
 						{% endif %}
-						{% if user.user_keys %}
+						{% if user.total_keys_count > 0 %}
 						<form action="{{ url_for('revoke_keys_route', user_id=user.telegram_id) }}" method="post" data-confirm="ВНИМАНИЕ! Это действие удалит ВСЕ ключи пользователя с серверов. Вы уверены?">
 							<button type="submit" class="button button-danger button-small">Отозвать</button>
 						</form>
@@ -50,36 +56,6 @@
 							<button type="submit" class="button button-danger button-small">Удалить</button>
 						</form>
 					</td>
-					</tr>
-					{% if user.user_keys %}
-					<tr>
-						<td colspan="6">
-							<ul class="user-keys-list">
-								{% for key in user.user_keys %}
-								<li>
-									<table class="keys-subtable">
-										<thead>
-											<tr>
-												<th>Название</th>
-												<th>Домен</th>
-												<th>Сервер</th>
-											</tr>
-										</thead>
-										<tbody>
-											<tr>
-												<td><strong>#{{ key.key_id }}</strong> {{ key.key_email }}</td>
-												<td>{{ (key.key_email.split('@')[1]) if '@' in key.key_email else '' }}</td>
-												<td>{{ key.host_name }}</td>
-											</tr>
-										</tbody>
-									</table>
-								</li>
-								{% endfor %}
-							</ul>
-						</td>
-					</tr>
-					{% endif %}
-			
 				</tr>
 				{% endfor %}
 			</tbody>
