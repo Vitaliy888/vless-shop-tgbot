@@ -30,8 +30,9 @@ def create_main_menu_keyboard(user_keys: list, trial_available: bool, is_admin: 
     builder.button(text="❓ Как использовать", callback_data="howto_vless")
     if is_admin:
         builder.button(text="📢 Рассылка", callback_data="start_broadcast")
+        builder.button(text="🛠 Выдать ключ", callback_data="admin_grant_key")
 
-    layout = [1 if trial_available and get_setting("trial_enabled") == "true" else 0, 2, 1, 2, 1, 1 if enable_referrals else 0, 1 if is_admin else 0]
+    layout = [1 if trial_available and get_setting("trial_enabled") == "true" else 0, 2, 1, 2, 1, 1 if enable_referrals else 0, 2 if is_admin else 0]
     actual_layout = [size for size in layout if size > 0]
     builder.adjust(*actual_layout)
     
@@ -104,7 +105,12 @@ def create_plans_keyboard(plans: list[dict], action: str, host_name: str, key_id
     for plan in plans:
         callback_data = f"buy_{host_name}_{plan['plan_id']}_{action}_{key_id}"
         builder.button(text=f"{plan['plan_name']} - {plan['price']:.0f} RUB", callback_data=callback_data)
-    back_callback = "manage_keys" if action == "extend" else "buy_new_key"
+    if action == "extend":
+        back_callback = "manage_keys"
+    elif action == "grant":
+        back_callback = "back_to_host_selection_grant"
+    else:
+        back_callback = "buy_new_key"
     builder.button(text="⬅️ Назад", callback_data=back_callback)
     builder.adjust(1) 
     return builder.as_markup()

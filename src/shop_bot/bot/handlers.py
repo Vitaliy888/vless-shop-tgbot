@@ -76,6 +76,10 @@ class Broadcast(StatesGroup):
 
 class WithdrawStates(StatesGroup):
     waiting_for_details = State()
+class AdminGrant(StatesGroup):
+    waiting_for_user_id = State()
+    waiting_for_host = State()
+    waiting_for_plan = State()
 
 def is_valid_email(email: str) -> bool:
     pattern = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
@@ -257,6 +261,105 @@ def get_user_router() -> Router:
     async def back_to_main_menu_handler(callback: types.CallbackQuery):
         await callback.answer()
         await show_main_menu(callback.message, edit_message=True)
+    @user_router.callback_query(F.data == "admin_grant_key")
+    async def admin_grant_key_entry(callback: types.CallbackQuery, state: FSMContext):
+        if str(callback.from_user.id) != ADMIN_ID:
+            await callback.answer("Доступ только для администратора", show_alert=True)
+            return
+        await callback.answer()
+        await callback.message.edit_text("Введите Telegram ID пользователя, которому выдать ключ:")
+        await state.set_state(AdminGrant.waiting_for_user_id)
+
+    @user_router.message(AdminGrant.waiting_for_user_id)
+    async def admin_grant_user_received(message: types.Message, state: FSMContext, bot: Bot):
+        if str(message.from_user.id) != ADMIN_ID:
+            return
+        try:
+            target_id = int(message.text.strip())
+        except Exception:
+            await message.answer("Неверный ID. Введите числовой Telegram ID.")
+            return
+        # ensure user exists in DB (create stub if needed)
+        target_user = get_user(target_id)
+        if not target_user:
+            register_user_if_not_exists(target_id, username=str(target_id), referrer_id=None)
+        await state.update_data(target_id=target_id)
+        hosts = get_all_hosts()
+        if not hosts:
+            await message.answer("❌ Нет доступных серверов.")
+            await state.clear()
+            return
+        await message.answer("Выберите сервер для выдачи ключа:", reply_markup=keyboards.create_host_selection_keyboard(hosts, action="grant"))
+        await state.set_state(AdminGrant.waiting_for_host)
+
+    @user_router.callback_query(AdminGrant.waiting_for_host, F.data.startswith("select_host_grant_"))
+    async def admin_grant_host_selected(callback: types.CallbackQuery, state: FSMContext):
+        if str(callback.from_user.id) != ADMIN_ID:
+            await callback.answer("Доступ только для администратора", show_alert=True)
+            return
+        await callback.answer()
+        host_name = callback.data[len("select_host_grant_"):]
+        plans = get_plans_for_host(host_name)
+        if not plans:
+            await callback.message.edit_text(f"❌ Для сервера \"{host_name}\" не настроены тарифы.")
+            await state.clear()
+            return
+        await state.update_data(host_name=host_name)
+        await callback.message.edit_text("Выберите тариф для выдачи:", reply_markup=keyboards.create_plans_keyboard(plans, action="grant", host_name=host_name))
+        await state.set_state(AdminGrant.waiting_for_plan)
+
+    @user_router.callback_query(AdminGrant.waiting_for_plan, F.data == "back_to_host_selection_grant")
+    async def admin_grant_back_to_hosts(callback: types.CallbackQuery, state: FSMContext):
+        if str(callback.from_user.id) != ADMIN_ID:
+            await callback.answer("Доступ только для администратора", show_alert=True)
+            return
+        await callback.answer()
+        hosts = get_all_hosts()
+        await callback.message.edit_text("Выберите сервер для выдачи ключа:", reply_markup=keyboards.create_host_selection_keyboard(hosts, action="grant"))
+        await state.set_state(AdminGrant.waiting_for_host)
+
+    @user_router.callback_query(AdminGrant.waiting_for_plan, F.data.startswith("buy_"))
+    async def admin_grant_plan_selected(callback: types.CallbackQuery, state: FSMContext, bot: Bot):
+        if str(callback.from_user.id) != ADMIN_ID:
+            await callback.answer("Доступ только для администратора", show_alert=True)
+            return
+        await callback.answer()
+        parts = callback.data.split("_")[1:]
+        action = parts[-2]
+        if action != 'grant':
+            await callback.answer("Неверное действие", show_alert=True)
+            return
+        plan_id = int(parts[-3])
+        host_name = "_".join(parts[:-3])
+        data = await state.get_data()
+        target_id = data.get('target_id')
+        # emulate purchase without payment
+        try:
+            days_to_add = get_plan_by_id(plan_id).get('months', 1) * 30
+            key_number = get_next_key_number(target_id)
+            domain_pattern = get_setting('key_email_domain') or '{bot_username}.bot'
+            bot_username = get_setting('telegram_bot_username') or 'bot'
+            domain = domain_pattern.format(bot_username=bot_username, host=host_name.replace(' ', '').lower())
+            email = f"user{target_id}-key{key_number}@{domain}"
+            result = await xui_api.create_or_update_key_on_host(host_name=host_name, email=email, days_to_add=days_to_add)
+            if not result:
+                await callback.message.edit_text("❌ Не удалось создать ключ в панели.")
+                await state.clear()
+                return
+            new_key_id = add_new_key(user_id=target_id, host_name=host_name, xui_client_uuid=result['client_uuid'], key_email=result['email'], expiry_timestamp_ms=result['expiry_timestamp_ms'])
+            expiry_dt = datetime.fromtimestamp(result['expiry_timestamp_ms'] / 1000)
+            await callback.message.edit_text(f"✅ Ключ выдан пользователю <code>{target_id}</code> до {expiry_dt.strftime('%d.%m.%Y %H:%M')}.", parse_mode='HTML')
+            # notify target user
+            try:
+                final_text = get_purchase_success_text("создан", key_number, expiry_dt, result['connection_string'])
+                await bot.send_message(chat_id=target_id, text=final_text, reply_markup=keyboards.create_key_info_keyboard(new_key_id))
+            except Exception as e:
+                logger.warning(f"Could not notify target user {target_id}: {e}")
+        except Exception as e:
+            logger.error(f"Admin grant failed: {e}", exc_info=True)
+            await callback.message.edit_text("❌ Ошибка при выдаче ключа.")
+        finally:
+            await state.clear()
 
     @user_router.callback_query(F.data == "show_profile")
     @registration_required

@@ -1,12 +1,12 @@
 import uuid
 from datetime import datetime, timedelta
 import logging
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote
 from typing import List, Dict
 
 from py3xui import Api, Client, Inbound
 
-from shop_bot.data_manager.database import get_host, get_key_by_email
+from shop_bot.data_manager.database import get_host, get_key_by_email, get_setting
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +120,36 @@ async def create_or_update_key_on_host(host_name: str, email: str, days_to_add: 
         logger.error(f"Workflow failed: Could not create/update client '{email}' on host '{host_name}'.")
         return None
     
-    connection_string = get_connection_string(inbound, client_uuid, host_data['host_url'], remark=host_name)
+    # Build remark using template with URL encoding
+    template = get_setting('key_connection_remark_template') or '{host}'
+    bot_username = get_setting('telegram_bot_username') or 'bot'
+    # Extract parts from email
+    email_local, email_domain = (email.split('@', 1) + [""])[0:2]
+    key_number = None
+    user_id = None
+    try:
+        import re
+        m = re.search(r"-key(\d+)", email_local)
+        if m:
+            key_number = m.group(1)
+        m2 = re.search(r"user(\d+)-key", email_local)
+        if m2:
+            user_id = m2.group(1)
+    except Exception:
+        pass
+    try:
+        remark_raw = template.format(
+            host=host_name,
+            bot_username=bot_username,
+            user_id=user_id or '',
+            key_number=key_number or '',
+            email_local=email_local,
+            email_domain=email_domain,
+        )
+    except Exception:
+        remark_raw = host_name
+    remark_filled = quote(remark_raw, safe='')
+    connection_string = get_connection_string(inbound, client_uuid, host_data['host_url'], remark=remark_filled)
     
     logger.info(f"Successfully processed key for '{email}' on host '{host_name}'.")
     
@@ -151,7 +180,36 @@ async def get_key_details_from_host(key_data: dict) -> dict | None:
     )
     if not api or not inbound: return None
 
-    connection_string = get_connection_string(inbound, key_data['xui_client_uuid'], host_db_data['host_url'], remark=host_name)
+    # Build remark consistently for details view too
+    template = get_setting('key_connection_remark_template') or '{host}'
+    bot_username = get_setting('telegram_bot_username') or 'bot'
+    email = key_data.get('key_email', '')
+    email_local, email_domain = (email.split('@', 1) + [""])[:2]
+    key_number = None
+    user_id = None
+    try:
+        import re
+        m = re.search(r"-key(\d+)", email_local)
+        if m:
+            key_number = m.group(1)
+        m2 = re.search(r"user(\d+)-key", email_local)
+        if m2:
+            user_id = m2.group(1)
+    except Exception:
+        pass
+    try:
+        remark_raw = template.format(
+            host=host_name,
+            bot_username=bot_username,
+            user_id=user_id or '',
+            key_number=key_number or '',
+            email_local=email_local,
+            email_domain=email_domain,
+        )
+    except Exception:
+        remark_raw = host_name
+    remark_filled = quote(remark_raw, safe='')
+    connection_string = get_connection_string(inbound, key_data['xui_client_uuid'], host_db_data['host_url'], remark=remark_filled)
     return {"connection_string": connection_string}
 
 async def delete_client_on_host(host_name: str, client_email: str) -> bool:
