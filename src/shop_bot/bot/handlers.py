@@ -118,6 +118,24 @@ def registration_required(f):
 def get_user_router() -> Router:
     user_router = Router()
 
+    async def notify_admin_of_new_user(bot: Bot, user_id: int, username: str, referrer_id: int | None):
+        if not ADMIN_ID:
+            return
+        try:
+            ref_info = f" от реферала {referrer_id}" if referrer_id else ""
+            text = (
+                "🆕 Новая регистрация\n"
+                f"ID: <code>{user_id}</code>\n"
+                f"Username: @{username or 'N/A'}{ref_info}"
+            )
+            try:
+                admin_chat_id = int(ADMIN_ID)
+            except Exception:
+                admin_chat_id = ADMIN_ID
+            await bot.send_message(chat_id=admin_chat_id, text=text, parse_mode='HTML')
+        except Exception as e:
+            logger.warning(f"Failed to notify admin about new user {user_id}: {e}")
+
     @user_router.message(CommandStart())
     async def start_handler(message: types.Message, state: FSMContext, bot: Bot, command: CommandObject):
         user_id = message.from_user.id
@@ -135,7 +153,11 @@ def get_user_router() -> Router:
                     except (IndexError, ValueError):
                         logger.warning(f"Invalid referral code received: {command.args}")
                 
+        # detect if new user before inserting
+        was_registered = bool(get_user(user_id))
         register_user_if_not_exists(user_id, username, referrer_id)
+        if not was_registered:
+            await notify_admin_of_new_user(bot, user_id, message.from_user.username, referrer_id)
         user_id = message.from_user.id
         username = message.from_user.username or message.from_user.full_name
         user_data = get_user(user_id)
@@ -1451,8 +1473,12 @@ async def notify_admin_of_purchase(bot: Bot, metadata: dict):
             f"💳 **Способ оплаты:** {payment_method}"
         )
 
+        try:
+            admin_chat_id = int(ADMIN_ID)
+        except Exception:
+            admin_chat_id = ADMIN_ID
         await bot.send_message(
-            chat_id=ADMIN_ID,
+            chat_id=admin_chat_id,
             text=message_text,
             parse_mode='Markdown'
         )

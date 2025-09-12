@@ -57,13 +57,22 @@
 							<ul class="user-keys-list">
 								{% for key in user.user_keys %}
 								<li>
-									<strong>#{{ key.key_id }}</strong>
-									{{ key.display_name or (key.key_name or key.key_email) }} (<small>{{ key.host_name }}</small>)
-									<form action="{{ url_for('edit_key_route', key_id=key.key_id) }}" method="post" class="inline-form">
-										<input type="text" name="key_name" value="{{ key.key_name or '' }}" placeholder="Новое имя" />
-										<input type="number" name="max_connections" value="{{ key.max_connections or '' }}" min="1" placeholder="max подключений" />
-										<button type="submit" class="button button-small">Сохранить</button>
-									</form>
+									<table class="keys-subtable">
+										<thead>
+											<tr>
+												<th>Название</th>
+												<th>Домен</th>
+												<th>Сервер</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td><strong>#{{ key.key_id }}</strong> {{ key.key_email }}</td>
+												<td>{{ (key.key_email.split('@')[1]) if '@' in key.key_email else '' }}</td>
+												<td>{{ key.host_name }}</td>
+											</tr>
+										</tbody>
+									</table>
 								</li>
 								{% endfor %}
 							</ul>
