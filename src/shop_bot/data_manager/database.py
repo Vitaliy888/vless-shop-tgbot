@@ -123,6 +123,7 @@ def initialize_db():
                 "default_max_connections": "0",
                 "key_name_template": "{name_or_email}",
                 "key_email_domain": "{bot_username}.bot",
+                "key_connection_remark_template": "{host}",
             }
             run_migration()
             for key, value in default_settings.items():

@@ -31,6 +31,7 @@ def create_main_menu_keyboard(user_keys: list, trial_available: bool, is_admin: 
     if is_admin:
         builder.button(text="📢 Рассылка", callback_data="start_broadcast")
         builder.button(text="🛠 Выдать ключ", callback_data="admin_grant_key")
+        builder.button(text="🔁 Пересоздать ключи", callback_data="reissue_keys")
 
     layout = [1 if trial_available and get_setting("trial_enabled") == "true" else 0, 2, 1, 2, 1, 1 if enable_referrals else 0, 2 if is_admin else 0]
     actual_layout = [size for size in layout if size > 0]

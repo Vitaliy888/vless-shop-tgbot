@@ -168,12 +168,12 @@ curl -sSL https://raw.githubusercontent.com/Vitaliy888/vless-shop-tgbot/main/ins
 
 ## 💎 Поддержать разработку
 
-**СБП/Карта РФ:** https://yookassa.ru/my/i/aJRiTyq5D3VB/l
+**СБП/Карта РФ:** 
 
-**CryptoBot:** https://t.me/send?start=IVftnggXmRv8
+**CryptoBot:** 
 
-**TON:** `UQAtdMEig3Wl_D3FNx4RU3RhxnoJI3IizGxrrNj3O8Q-fDpK`
+**TON:** ``
 
-**USDT (TRC20):** `TBW9TFUh93U1G5eTT1VTsZw51L669khCiz`
+**USDT (TRC20):** ``
 
 ## Я ценю любой вклад в развитие проекта ❤️

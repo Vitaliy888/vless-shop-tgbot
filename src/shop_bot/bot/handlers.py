@@ -483,6 +483,76 @@ def get_user_router() -> Router:
 
         await state.set_state(Broadcast.waiting_for_confirmation)
 
+
+    @user_router.callback_query(F.data == "reissue_keys")
+    @registration_required
+    async def reissue_keys_prompt(callback: types.CallbackQuery, state: FSMContext):
+        if str(callback.from_user.id) != ADMIN_ID:
+            await callback.answer("У вас нет прав.", show_alert=True)
+            return
+        await callback.answer()
+        await callback.message.edit_text(
+            "Вы действительно хотите пересоздать ВСЕ активные ключи у пользователей?\nЭто действие обновит ключи на панели и пришлёт новые соединения пользователям.",
+            reply_markup=keyboards.create_broadcast_confirmation_keyboard()
+        )
+        await state.set_state(Broadcast.waiting_for_confirmation)
+
+
+    @user_router.callback_query(Broadcast.waiting_for_confirmation, F.data == "confirm_broadcast")
+    @registration_required
+    async def reissue_keys_confirm_or_broadcast(callback: types.CallbackQuery, state: FSMContext, bot: Bot):
+        # We reuse the same confirmation handler for broadcast and for reissue flow. Determine intent by last message text.
+        last_text = (callback.message.text or "")
+        if "пересоздать" in last_text.lower():
+            # Start reissue flow
+            await callback.message.edit_text("⏳ Начинаю пересоздание ключей... Пожалуйста, ждите.")
+            await state.clear()
+            # gather all users with active keys
+            users = get_all_users()
+            processed = 0
+            failed = 0
+            for user in users:
+                user_id = user['telegram_id']
+                # skip banned
+                if user.get('is_banned'):
+                    continue
+                keys = get_user_keys(user_id)
+                now = datetime.now()
+                active_keys = [k for k in keys if k.get('expiry_date') and datetime.fromisoformat(str(k['expiry_date'])) > now]
+                for k in active_keys:
+                    try:
+                        # call xui_api to create/update client and get connection string
+                        result = await xui_api.create_or_update_key_on_host(k['host_name'], k['key_email'], days_to_add=0)
+                        if not result:
+                            failed += 1
+                            continue
+                        # update DB with new uuid/expiry
+                        update_key_info(k['key_id'], result['client_uuid'], result['expiry_timestamp_ms'])
+                        # send updated connection string to user
+                        try:
+                            expiry_dt = datetime.fromtimestamp(result['expiry_timestamp_ms'] / 1000)
+                            # construct message
+                            key_number = None
+                            try:
+                                import re
+                                m = re.search(r"-key(\d+)", k['key_email'])
+                                if m: key_number = int(m.group(1))
+                            except Exception:
+                                pass
+                            final_text = get_purchase_success_text("обновлен", key_number or 0, expiry_dt, result['connection_string'])
+                            await bot.send_message(chat_id=user_id, text=final_text, reply_markup=keyboards.create_key_info_keyboard(k['key_id']))
+                            processed += 1
+                        except Exception:
+                            logger.exception(f"Failed to notify user {user_id} about reissued key {k['key_id']}")
+                            failed += 1
+                    except Exception:
+                        logger.exception(f"Failed to reissue key {k.get('key_id')} for user {user_id}")
+                        failed += 1
+            await callback.message.edit_text(f"Готово. Обработано: {processed}, ошибок: {failed}.")
+        else:
+            # existing broadcast flow (kept intact)
+            await confirm_broadcast_handler(callback, state, bot)
+
     @user_router.callback_query(Broadcast.waiting_for_confirmation, F.data == "confirm_broadcast")
     async def confirm_broadcast_handler(callback: types.CallbackQuery, state: FSMContext, bot: Bot):
         await callback.message.edit_text("⏳ Начинаю рассылку... Это может занять некоторое время.")
