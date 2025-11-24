@@ -491,8 +491,41 @@ def get_user_router() -> Router:
             await callback.answer("У вас нет прав.", show_alert=True)
             return
         await callback.answer()
+        hosts = get_all_hosts()
+        if not hosts:
+            await callback.message.edit_text("❌ В базе нет серверов. Сначала добавьте хосты в панели.")
+            return
+
+        # if only one host, ask confirmation for that host
+        if len(hosts) == 1:
+            host_name = hosts[0]['host_name']
+            await state.update_data(reissue_host=host_name)
+            await callback.message.edit_text(
+                f"Вы собираетесь пересоздать ключи только на сервере '{host_name}'. Подтвердите действие.",
+                reply_markup=keyboards.create_broadcast_confirmation_keyboard()
+            )
+            await state.set_state(Broadcast.waiting_for_confirmation)
+            return
+
+        # multiple hosts: show selection (the helper creates buttons for each host)
         await callback.message.edit_text(
-            "Вы действительно хотите пересоздать ВСЕ активные ключи у пользователей?\nЭто действие обновит ключи на панели и пришлёт новые соединения пользователям.",
+            "Выберите сервер, для которого выполнить пересоздание ключей (или нажмите 'Все серверы'):",
+            reply_markup=keyboards.create_host_selection_keyboard(hosts, action="reissue")
+        )
+
+    @user_router.callback_query(F.data.startswith("select_host_reissue_"))
+    @registration_required
+    async def reissue_host_selection_handler(callback: types.CallbackQuery, state: FSMContext):
+        await callback.answer()
+        host_name = callback.data[len("select_host_reissue_"):]
+        # special token for all hosts might be represented as '__all__'
+        if host_name == '__all__' or host_name == '___all__':
+            chosen = '__all__'
+        else:
+            chosen = host_name
+        await state.update_data(reissue_host=chosen)
+        await callback.message.edit_text(
+            f"Подтвердите пересоздание ключей для сервера: {chosen}",
             reply_markup=keyboards.create_broadcast_confirmation_keyboard()
         )
         await state.set_state(Broadcast.waiting_for_confirmation)
@@ -501,37 +534,35 @@ def get_user_router() -> Router:
     @user_router.callback_query(Broadcast.waiting_for_confirmation, F.data == "confirm_broadcast")
     @registration_required
     async def reissue_keys_confirm_or_broadcast(callback: types.CallbackQuery, state: FSMContext, bot: Bot):
-        # We reuse the same confirmation handler for broadcast and for reissue flow. Determine intent by last message text.
-        last_text = (callback.message.text or "")
-        if "пересоздать" in last_text.lower():
-            # Start reissue flow
+        # If FSM contains 'reissue_host', perform reissue for that host (or all)
+        data = await state.get_data()
+        reissue_host = data.get('reissue_host')
+        if reissue_host is not None:
             await callback.message.edit_text("⏳ Начинаю пересоздание ключей... Пожалуйста, ждите.")
             await state.clear()
-            # gather all users with active keys
-            users = get_all_users()
             processed = 0
             failed = 0
+            users = get_all_users()
             for user in users:
                 user_id = user['telegram_id']
-                # skip banned
                 if user.get('is_banned'):
                     continue
                 keys = get_user_keys(user_id)
                 now = datetime.now()
-                active_keys = [k for k in keys if k.get('expiry_date') and datetime.fromisoformat(str(k['expiry_date'])) > now]
-                for k in active_keys:
+                if reissue_host == '__all__':
+                    target_keys = [k for k in keys if k.get('expiry_date') and datetime.fromisoformat(str(k['expiry_date'])) > now]
+                else:
+                    target_keys = [k for k in keys if k.get('host_name') == reissue_host and k.get('expiry_date') and datetime.fromisoformat(str(k['expiry_date'])) > now]
+
+                for k in target_keys:
                     try:
-                        # call xui_api to create/update client and get connection string
                         result = await xui_api.create_or_update_key_on_host(k['host_name'], k['key_email'], days_to_add=0)
                         if not result:
                             failed += 1
                             continue
-                        # update DB with new uuid/expiry
                         update_key_info(k['key_id'], result['client_uuid'], result['expiry_timestamp_ms'])
-                        # send updated connection string to user
                         try:
                             expiry_dt = datetime.fromtimestamp(result['expiry_timestamp_ms'] / 1000)
-                            # construct message
                             key_number = None
                             try:
                                 import re
@@ -548,10 +579,12 @@ def get_user_router() -> Router:
                     except Exception:
                         logger.exception(f"Failed to reissue key {k.get('key_id')} for user {user_id}")
                         failed += 1
+
             await callback.message.edit_text(f"Готово. Обработано: {processed}, ошибок: {failed}.")
-        else:
-            # existing broadcast flow (kept intact)
-            await confirm_broadcast_handler(callback, state, bot)
+            return
+
+        # otherwise fallback to broadcast behavior
+        await confirm_broadcast_handler(callback, state, bot)
 
     @user_router.callback_query(Broadcast.waiting_for_confirmation, F.data == "confirm_broadcast")
     async def confirm_broadcast_handler(callback: types.CallbackQuery, state: FSMContext, bot: Bot):

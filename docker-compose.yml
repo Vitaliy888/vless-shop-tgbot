@@ -2,6 +2,8 @@ services:
   bot:
     build: .
     restart: unless-stopped
+    environment:
+      - AUTO_START_SHOP_BOT=1
     ports:
       - '1488:1488'
     volumes:

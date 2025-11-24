@@ -2,6 +2,7 @@ import logging
 import threading
 import asyncio
 import signal
+import os
 
 from shop_bot.webhook_server.app import create_webhook_app
 from shop_bot.data_manager.scheduler import periodic_subscription_check
@@ -49,6 +50,23 @@ def main():
         logger.info("Flask server started in a background thread on http://0.0.0.0:1488")
             
         logger.info("Application is running. Bot can be started from the web panel.")
+
+        # Автозапуск ботов по переменным окружения (опционально).
+        # Чтобы включить автозапуск, задайте переменную окружения AUTO_START_SHOP_BOT=1
+        # (и при необходимости AUTO_START_SUPPORT_BOT=1).
+        try:
+            auto_shop = os.environ.get('AUTO_START_SHOP_BOT')
+            auto_support = os.environ.get('AUTO_START_SUPPORT_BOT')
+            if auto_shop and auto_shop.lower() in ('1', 'true', 'yes'):
+                logger.info('AUTO_START_SHOP_BOT enabled — пытаюсь запустить ShopBot автоматически.')
+                result = bot_controller.start_shop_bot()
+                logger.info(f"Auto-start ShopBot result: {result}")
+            if auto_support and auto_support.lower() in ('1', 'true', 'yes'):
+                logger.info('AUTO_START_SUPPORT_BOT enabled — пытаюсь запустить SupportBot автоматически.')
+                result = bot_controller.start_support_bot()
+                logger.info(f"Auto-start SupportBot result: {result}")
+        except Exception:
+            logger.exception('Failed to autostart bots based on environment variables')
         
         asyncio.create_task(periodic_subscription_check(bot_controller))
 
